@@ -22,7 +22,7 @@ from flask_cors import CORS
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -71,45 +71,81 @@ class TelegramProxyServer:
     def handle_socks5_client(self, client_socket):
         """Handle SOCKS5 client connection"""
         try:
-            # SOCKS5 greeting
+            # SOCKS5 greeting (VER, NMETHODS, METHODS)
             data = client_socket.recv(262)
-            if len(data) < 3 or data[0] != 0x05:
+            if not data or len(data) < 2 or data[0] != 0x05: # SOCKS5 version
+                logger.warning(f"Invalid SOCKS5 greeting from {client_socket.getpeername()}: {data.hex()}")
                 client_socket.close()
                 return
             
-            # Send no authentication required
+            nmethods = data[1]
+            methods = data[2:2+nmethods]
+
+            # Check for NO AUTHENTICATION REQUIRED (0x00)
+            if 0x00 not in methods:
+                logger.warning(f"No supported SOCKS5 authentication method from {client_socket.getpeername()}. Methods: {methods.hex()}")
+                client_socket.send(b'\x05\xFF') # No acceptable methods
+                client_socket.close()
+                return
+            
+            # Send NO AUTHENTICATION REQUIRED (VER, METHOD)
             client_socket.send(b'\x05\x00')
             
-            # Receive connection request
+            # Receive connection request (VER, CMD, RSV, ATYP, DST.ADDR, DST.PORT)
             data = client_socket.recv(4)
-            if len(data) < 4 or data[0] != 0x05 or data[1] != 0x01:
+            if not data or len(data) < 4 or data[0] != 0x05 or data[2] != 0x00: # SOCKS5 version, RSV
+                logger.warning(f"Invalid SOCKS5 request header from {client_socket.getpeername()}: {data.hex()}")
                 client_socket.close()
                 return
             
+            cmd = data[1]
+            if cmd != 0x01: # Only CONNECT command is supported
+                logger.warning(f"Unsupported SOCKS5 command {cmd} from {client_socket.getpeername()}")
+                client_socket.send(b'\x05\x07\x00\x01\x00\x00\x00\x00\x00\x00') # Command not supported
+                client_socket.close()
+                return
+
             # Parse address
             addr_type = data[3]
+            addr = None
+            port = None
+
             if addr_type == 0x01:  # IPv4
                 addr_data = client_socket.recv(6)
+                if len(addr_data) < 6:
+                    logger.warning(f"Incomplete IPv4 address data from {client_socket.getpeername()}")
+                    client_socket.close()
+                    return
                 addr = socket.inet_ntoa(addr_data[:4])
                 port = struct.unpack('>H', addr_data[4:6])[0]
             elif addr_type == 0x03:  # Domain name
-                addr_len = client_socket.recv(1)[0]
+                addr_len_byte = client_socket.recv(1)
+                if not addr_len_byte:
+                    logger.warning(f"Missing domain length byte from {client_socket.getpeername()}")
+                    client_socket.close()
+                    return
+                addr_len = addr_len_byte[0]
                 addr_data = client_socket.recv(addr_len + 2)
+                if len(addr_data) < addr_len + 2:
+                    logger.warning(f"Incomplete domain name data from {client_socket.getpeername()}")
+                    client_socket.close()
+                    return
                 addr = addr_data[:addr_len].decode('utf-8')
                 port = struct.unpack('>H', addr_data[addr_len:addr_len+2])[0]
             else:
-                # Unsupported address type
-                client_socket.send(b'\x05\x08\x00\x01\x00\x00\x00\x00\x00\x00')
+                logger.warning(f"Unsupported SOCKS5 address type {addr_type} from {client_socket.getpeername()}")
+                client_socket.send(b'\x05\x08\x00\x01\x00\x00\x00\x00\x00\x00') # Address type not supported
                 client_socket.close()
                 return
             
+            logger.info(f"SOCKS5 connecting to target: {addr}:{port}")
             # Connect to target server
             try:
                 target_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 target_socket.connect((addr, port))
                 
-                # Send success response
-                client_socket.send(b'\x05\x00\x00\x01\x00\x00\x00\x00\x00\x00')
+                # Send success response (VER, REP, RSV, ATYP, BND.ADDR, BND.PORT)
+                client_socket.send(b'\x05\x00\x00\x01\x00\x00\x00\x00\x00\x00') # Success, BND.ADDR and BND.PORT are 0.0.0.0:0
                 
                 # Log connection for sponsorship tracking
                 self.log_connection(client_socket.getpeername(), addr, port)
@@ -119,13 +155,16 @@ class TelegramProxyServer:
                 
             except Exception as e:
                 logger.error(f"Failed to connect to {addr}:{port} - {e}")
-                client_socket.send(b'\x05\x01\x00\x01\x00\x00\x00\x00\x00\x00')
+                client_socket.send(b'\x05\x01\x00\x01\x00\x00\x00\x00\x00\x00') # General SOCKS server failure
                 client_socket.close()
                 
         except Exception as e:
-            logger.error(f"SOCKS5 client error: {e}")
+            logger.error(f"SOCKS5 client handler error for {client_socket.getpeername()}: {e}")
         finally:
-            client_socket.close()
+            try:
+                client_socket.close()
+            except Exception as e:
+                logger.error(f"Error closing SOCKS5 client socket: {e}")
     
     def start_mtproto_server(self):
         """Start MTProto proxy server (simplified implementation)"""
@@ -413,5 +452,4 @@ def main():
     app.run(host=args.host, port=args.web_port, debug=False)
 
 if __name__ == '__main__':
-    main()
-
+    main())
