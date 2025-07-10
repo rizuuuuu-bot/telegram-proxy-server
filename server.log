@@ -1,0 +1,20 @@
+nohup: ignoring input
+2025-07-10 08:37:32,421 - INFO - Telegram Proxy Server started successfully
+2025-07-10 08:37:32,421 - INFO - MTProto server listening on 0.0.0.0:8443
+2025-07-10 08:37:32,421 - INFO - SOCKS5 server listening on 0.0.0.0:1080
+2025-07-10 08:37:32,421 - INFO - SOCKS5 Proxy: 0.0.0.0:1080
+2025-07-10 08:37:32,421 - INFO - MTProto Proxy: 0.0.0.0:8443
+2025-07-10 08:37:32,421 - INFO - Sponsor Channel: @test_marketing_channel
+2025-07-10 08:37:32,421 - INFO - Proxy Secret: b2a716a2cc6fe9d243450bc6616b04f4
+2025-07-10 08:37:32,421 - INFO - Starting web interface on 0.0.0.0:5000
+ * Serving Flask app 'app'
+ * Debug mode: off
+2025-07-10 08:37:32,425 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://169.254.0.21:5000
+2025-07-10 08:37:32,425 - INFO - [33mPress CTRL+C to quit[0m
+2025-07-10 08:37:41,146 - INFO - 127.0.0.1 - - [10/Jul/2025 08:37:41] "GET /health HTTP/1.1" 200 -
+2025-07-10 08:37:41,155 - INFO - 127.0.0.1 - - [10/Jul/2025 08:37:41] "GET /api/stats HTTP/1.1" 200 -
+2025-07-10 08:37:46,935 - INFO - SOCKS5 connection from ('127.0.0.1', 57120)
+2025-07-10 08:37:46,940 - INFO - Connection logged: SOCKS5 ('127.0.0.1', 57120) -> 3.233.51.125:80
