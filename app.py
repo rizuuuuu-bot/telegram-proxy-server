@@ -27,8 +27,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class TelegramProxyServer:
-    def __init__(self, host=\'0.0.0.0\', socks_port=1080, mtproto_port=443, 
-                 sponsor_channel=None, proxy_secret=None):
+    def __init__(self, host=\'0.0.0.0\', socks_port=1080, mtproto_port=443, sponsor_channel=None, proxy_secret=None):
         self.host = host
         self.socks_port = socks_port
         self.mtproto_port = mtproto_port
