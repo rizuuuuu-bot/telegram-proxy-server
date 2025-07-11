@@ -27,13 +27,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class TelegramProxyServer:
-    def __init__(self, host='0.0.0.0', socks_port=1080, mtproto_port=443, 
+    def __init__(self, host=\'0.0.0.0\', socks_port=1080, mtproto_port=443, 
                  sponsor_channel=None, proxy_secret=None):
         self.host = host
         self.socks_port = socks_port
         self.mtproto_port = mtproto_port
-        self.sponsor_channel = sponsor_channel or os.getenv('SPONSOR_CHANNEL', '@your_channel')
-        self.proxy_secret = proxy_secret or os.getenv('PROXY_SECRET', self.generate_secret())
+        self.sponsor_channel = sponsor_channel or os.getenv(\'SPONSOR_CHANNEL\', \'@your_channel\')
+        self.proxy_secret = proxy_secret or os.getenv(\'PROXY_SECRET\', self.generate_secret())
         self.running = False
         self.connections = []
         
@@ -84,12 +84,12 @@ class TelegramProxyServer:
             # Check for NO AUTHENTICATION REQUIRED (0x00)
             if 0x00 not in methods:
                 logger.warning(f"No supported SOCKS5 authentication method from {client_socket.getpeername()}. Methods: {methods.hex()}")
-                client_socket.send(b'\x05\xFF') # No acceptable methods
+                client_socket.send(b\'\x05\xFF\') # No acceptable methods
                 client_socket.close()
                 return
             
             # Send NO AUTHENTICATION REQUIRED (VER, METHOD)
-            client_socket.send(b'\x05\x00')
+            client_socket.send(b\'\x05\x00\')
             
             # Receive connection request (VER, CMD, RSV, ATYP, DST.ADDR, DST.PORT)
             data = client_socket.recv(4)
@@ -101,7 +101,7 @@ class TelegramProxyServer:
             cmd = data[1]
             if cmd != 0x01: # Only CONNECT command is supported
                 logger.warning(f"Unsupported SOCKS5 command {cmd} from {client_socket.getpeername()}")
-                client_socket.send(b'\x05\x07\x00\x01\x00\x00\x00\x00\x00\x00') # Command not supported
+                client_socket.send(b\'\x05\x07\x00\x01\x00\x00\x00\x00\x00\x00\') # Command not supported
                 client_socket.close()
                 return
 
@@ -117,7 +117,7 @@ class TelegramProxyServer:
                     client_socket.close()
                     return
                 addr = socket.inet_ntoa(addr_data[:4])
-                port = struct.unpack('>H', addr_data[4:6])[0]
+                port = struct.unpack(\">H\", addr_data[4:6])[0]
             elif addr_type == 0x03:  # Domain name
                 addr_len_byte = client_socket.recv(1)
                 if not addr_len_byte:
@@ -130,11 +130,11 @@ class TelegramProxyServer:
                     logger.warning(f"Incomplete domain name data from {client_socket.getpeername()}")
                     client_socket.close()
                     return
-                addr = addr_data[:addr_len].decode('utf-8')
-                port = struct.unpack('>H', addr_data[addr_len:addr_len+2])[0]
+                addr = addr_data[:addr_len].decode(\'utf-8\')
+                port = struct.unpack(\">H\", addr_data[addr_len:addr_len+2])[0]
             else:
                 logger.warning(f"Unsupported SOCKS5 address type {addr_type} from {client_socket.getpeername()}")
-                client_socket.send(b'\x05\x08\x00\x01\x00\x00\x00\x00\x00\x00') # Address type not supported
+                client_socket.send(b\'\x05\x08\x00\x01\x00\x00\x00\x00\x00\x00\') # Address type not supported
                 client_socket.close()
                 return
             
@@ -145,7 +145,7 @@ class TelegramProxyServer:
                 target_socket.connect((addr, port))
                 
                 # Send success response (VER, REP, RSV, ATYP, BND.ADDR, BND.PORT)
-                client_socket.send(b'\x05\x00\x00\x01\x00\x00\x00\x00\x00\x00') # Success, BND.ADDR and BND.PORT are 0.0.0.0:0
+                client_socket.send(b\'\x05\x00\x00\x01\x00\x00\x00\x00\x00\x00\') # Success, BND.ADDR and BND.PORT are 0.0.0.0:0
                 
                 # Log connection for sponsorship tracking
                 self.log_connection(client_socket.getpeername(), addr, port)
@@ -155,7 +155,7 @@ class TelegramProxyServer:
                 
             except Exception as e:
                 logger.error(f"Failed to connect to {addr}:{port} - {e}")
-                client_socket.send(b'\x05\x01\x00\x01\x00\x00\x00\x00\x00\x00') # General SOCKS server failure
+                client_socket.send(b\'\x05\x01\x00\x01\x00\x00\x00\x00\x00\x00\') # General SOCKS server failure
                 client_socket.close()
                 
         except Exception as e:
@@ -201,7 +201,7 @@ class TelegramProxyServer:
             # Log connection for sponsorship
             self.log_connection(client_socket.getpeername(), "telegram", 443, protocol="MTProto")
             
-            # For now, we'll implement a basic relay to Telegram servers
+            # For now, we\'ll implement a basic relay to Telegram servers
             # In production, this would include proper MTProto encryption and channel injection
             
             # Connect to Telegram server
@@ -338,7 +338,7 @@ CORS(app)
 # Global proxy server instance
 proxy_server = None
 
-@app.route('/')
+@app.route(\'/\')
 def index():
     """Main dashboard"""
     return render_template_string("""
@@ -373,10 +373,10 @@ def index():
         <div class="config-box">
             <h3>⚙️ Proxy Configuration</h3>
             <p><strong>SOCKS5 Proxy URL:</strong></p>
-            <code>socks5://{{ request.host.split(':')[0] }}:1080</code>
+            <code>socks5://{{ request.host.split(\":\")[0] }}:1080</code>
             
             <p><strong>MTProto Proxy URL:</strong></p>
-            <code>tg://proxy?server={{ request.host.split(':')[0] }}&port=443&secret={{ stats.proxy_secret }}</code>
+            <code>tg://proxy?server={{ request.host.split(\":\")[0] }}&port=443&secret={{ stats.proxy_secret }}</code>
             
             <p><strong>Proxy Secret:</strong></p>
             <code>{{ stats.proxy_secret }}</code>
@@ -390,47 +390,47 @@ def index():
         
         <div style="text-align: center; margin-top: 30px;">
             <button class="btn" onclick="window.location.reload()">🔄 Refresh Stats</button>
-            <button class="btn" onclick="window.open('/api/stats', '_blank')">📈 View API</button>
+            <button class="btn" onclick="window.open(\'/api/stats\', \'_blank\')">📈 View API</button>
         </div>
     </div>
 </body>
 </html>
     """, stats=proxy_server.get_stats() if proxy_server else {})
 
-@app.route('/api/stats')
+@app.route(\'/api/stats\')
 def api_stats():
     """API endpoint for statistics"""
     if proxy_server:
         return jsonify(proxy_server.get_stats())
     return jsonify({"error": "Proxy server not running"})
 
-@app.route('/api/config')
+@app.route(\'/api/config\')
 def api_config():
     """API endpoint for configuration"""
     if proxy_server:
         stats = proxy_server.get_stats()
         return jsonify({
-            "socks5_url": f"socks5://{request.host.split(':')[0]}:1080",
-            "mtproto_url": f"tg://proxy?server={request.host.split(':')[0]}&port=443&secret={stats['proxy_secret']}",
-            "sponsor_channel": stats['sponsor_channel'],
-            "proxy_secret": stats['proxy_secret']
+            "socks5_url": f"socks5://{request.host.split(\":\")[0]}:1080",
+            "mtproto_url": f"tg://proxy?server={request.host.split(\":\")[0]}&port=443&secret={stats[\'proxy_secret\']}",
+            "sponsor_channel": stats[\'sponsor_channel\'],
+            "proxy_secret": stats[\'proxy_secret\']
         })
     return jsonify({"error": "Proxy server not running"})
 
-@app.route('/health')
+@app.route(\'/health\')
 def health():
     """Health check endpoint for Railway"""
     return jsonify({"status": "healthy", "service": "telegram-proxy"})
 
 def main():
     """Main function"""
-    parser = argparse.ArgumentParser(description='Telegram Proxy Server with Channel Sponsorship')
-    parser.add_argument('--host', default='0.0.0.0', help='Host to bind to')
-    parser.add_argument('--web-port', type=int, default=int(os.getenv('PORT', 5000)), help='Web interface port')
-    parser.add_argument('--socks-port', type=int, default=1080, help='SOCKS5 proxy port')
-    parser.add_argument('--mtproto-port', type=int, default=443, help='MTProto proxy port')
-    parser.add_argument('--sponsor-channel', default=os.getenv('SPONSOR_CHANNEL', '@your_channel'), help='Sponsor channel')
-    parser.add_argument('--proxy-secret', default=os.getenv('PROXY_SECRET'), help='Proxy secret')
+    parser = argparse.ArgumentParser(description=\'Telegram Proxy Server with Channel Sponsorship\')
+    parser.add_argument(\'--host\', default=\'0.0.0.0\', help=\'Host to bind to\')
+    parser.add_argument(\'--web-port\', type=int, default=int(os.getenv(\'PORT\', 5000)), help=\'Web interface port\')
+    parser.add_argument(\'--socks-port\', type=int, default=1080, help=\'SOCKS5 proxy port\')
+    parser.add_argument(\'--mtproto-port\', type=int, default=443, help=\'MTProto proxy port\')
+    parser.add_argument(\'--sponsor-channel\', default=os.getenv(\'SPONSOR_CHANNEL\', \'@your_channel\'), help=\'Sponsor channel\')
+    parser.add_argument(\'--proxy-secret\', default=os.getenv(\'PROXY_SECRET\'), help=\'Proxy secret\')
     
     args = parser.parse_args()
     
@@ -451,5 +451,5 @@ def main():
     logger.info(f"Starting web interface on {args.host}:{args.web_port}")
     app.run(host=args.host, port=args.web_port, debug=False)
 
-if __name__ == '__main__':
+if __name__ == \'__main__\':
     main()
