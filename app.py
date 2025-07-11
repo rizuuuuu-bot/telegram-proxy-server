@@ -1,4 +1,4 @@
-!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Telegram Proxy Server with Channel Sponsorship
@@ -226,7 +226,7 @@ class TelegramProxyServer:
             # Log connection for sponsorship
             self.log_connection(client_socket.getpeername(), "telegram", 443, protocol="MTProto")
             
-            # For now, we\\\"ll implement a basic relay to Telegram servers
+            # For now, we\\\\\\\"ll implement a basic relay to Telegram servers
             # In production, this would include proper MTProto encryption and channel injection
             
             # Connect to Telegram server
@@ -415,7 +415,7 @@ def index():
         
         <div style="text-align: center; margin-top: 30px;">
             <button class="btn" onclick="window.location.reload()">🔄 Refresh Stats</button>
-            <button class="btn" onclick="window.open(\\\\\\\\\\\\\\\'/api/stats\\\\\\\\\\\\\\\", \\\\\\\\\\\\\\\'_blank\\\\\\\\\\\\\\\")">📈 View API</button>
+            <button class="btn" onclick="window.open(\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\'/api/stats\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\", \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"_blank\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\")">📈 View API</button>
         </div>
     </div>
 </body>
