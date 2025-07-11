@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Telegram Proxy Server with Channel Sponsorship
@@ -226,7 +226,7 @@ class TelegramProxyServer:
             # Log connection for sponsorship
             self.log_connection(client_socket.getpeername(), "telegram", 443, protocol="MTProto")
             
-            # For now, we\\'ll implement a basic relay to Telegram servers
+            # For now, we\\\"ll implement a basic relay to Telegram servers
             # In production, this would include proper MTProto encryption and channel injection
             
             # Connect to Telegram server
@@ -415,7 +415,7 @@ def index():
         
         <div style="text-align: center; margin-top: 30px;">
             <button class="btn" onclick="window.location.reload()">🔄 Refresh Stats</button>
-            <button class="btn" onclick="window.open(\\\\\\'/api/stats\\\\\\\", \\\\\\\'_blank\\\\\\\")">📈 View API</button>
+            <button class="btn" onclick="window.open(\\\\\\\\\\\\\\\'/api/stats\\\\\\\\\\\\\\\", \\\\\\\\\\\\\\\'_blank\\\\\\\\\\\\\\\")">📈 View API</button>
         </div>
     </div>
 </body>
@@ -434,9 +434,11 @@ def api_config():
     """API endpoint for configuration"""
     if proxy_server:
         stats = proxy_server.get_stats()
+        # Use a temporary variable to avoid f-string parsing issues with split(":")
+        host_without_port = request.host.split(":")[0]
         return jsonify({
-            "socks5_url": f"socks5://{request.host.split(":")[0]}:1080",
-            "mtproto_url": f"tg://proxy?server={request.host.split(":")[0]}&port=443&secret={stats["proxy_secret"]}",
+            "socks5_url": f"socks5://{host_without_port}:1080",
+            "mtproto_url": f"tg://proxy?server={host_without_port}&port=443&secret={stats["proxy_secret"]}",
             "sponsor_channel": stats["sponsor_channel"],
             "proxy_secret": stats["proxy_secret"]
         })
